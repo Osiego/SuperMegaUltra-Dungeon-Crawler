@@ -8,7 +8,7 @@ HEIGHT = 600
 FPS = 60
 
 # Tile size
-TILE_SIZE = 50
+TILE_SIZE = 64
 
 # Colors
 GREEN = (0, 255, 0)
