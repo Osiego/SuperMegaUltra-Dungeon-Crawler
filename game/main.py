@@ -6,6 +6,7 @@ from player import Player
 from enemy import Enemy
 from level import Level
 from hud import HUD
+from assets import player_sprite, rat_sprite, end_point_sprite, wall_tile_sprite, floor_tile_sprite
 
 # Initialize Pygame
 pygame.init()
@@ -14,61 +15,25 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Cody's Dungeon")
 
-# Load player sprite from the assets folder
-try:
-    player_sprite = pygame.image.load('/home/shokk/PycharmProjects/Game/.venv/assets/human_male.png')
-    player_sprite = pygame.transform.scale(player_sprite, (50, 50))  # Resize if necessary
-except pygame.error as e:
-    print(f"Unable to load player sprite image: {e}")
-    sys.exit(1)
+# Level layout (1s are walls, 0s are open space, 'S' is spawn point, 'E' is end point)
+level_layout = [
+    "1S1111111111111111111111111111111111111111111111111111E111111111111",
+    "1001000000000000000000000000000000000000000000000000100010000000001",
+    "1000000000000000000000100000000000010000000000000000100001000000001",
+    "1000000000000000000000100110000000010000000000000000100001000000001",
+    "1000000000000000000000100110000100000000000000000000001000010000001",
+    "1000000000000110001000100000000100000000010000000010010000010000001",
+    "1000000000000000001000000000000000000000010000000000000000010000001",
+    "1000000000000000000000000100000000000000000001000000000000000000011",
+    "100000000000010000011111110000000000000000000100000000000000000000E",
+    "1111111111111111111111111111111111111111111111111111111111111111111",
+]
 
-# Load rat sprite from the assets folder
-try:
-    rat_sprite = pygame.image.load('/home/shokk/PycharmProjects/Game/.venv/game/Rat.png')
-    rat_sprite = pygame.transform.scale(rat_sprite, (50, 50))  # Resize if necessary
-except pygame.error as e:
-    print(f"Unable to load rat sprite image: {e}")
-    sys.exit(1)
-
-# Load end point sprite from the assets folder
-try:
-    end_point_sprite = pygame.image.load('/home/shokk/PycharmProjects/Game/.venv/assets/end_point.png')
-    end_point_sprite = pygame.transform.scale(end_point_sprite, (50, 50))  # Resize if necessary
-except pygame.error as e:
-    print(f"Unable to load end point sprite image: {e}")
-    sys.exit(1)
-
-# function to randomly generate level layout
-def generate_random_level(grid_width, grid_height):
-    layout = [['1'] * grid_width for _ in range(grid_height)]
-    start_x, start_y = 1, 1
-    end_x, end_y = grid_width - 2, grid_height - 2
-
-    # use DFS to create a random path from Start - Finish
-    def create_path(x, y):
-        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
-        random.shuffle(directions)
-        for dx, dy in directions:
-            nx, ny = x +dx, y + dy
-            if 1 <= nx < grid_width -1 and 1 <= ny < grid_height -1 and layout[ny][nx] == '1':
-                layout[ny][nx] = '0'
-                create_path(nx, ny)
-
-        layout[start_y][start_x] = 'S'  # start point
-        layout[end_y][end_x] = 'E'   # End Point
-        create_path(start_x, start_y)
-
-        return_layout
-
-    # generate random level layout
-    level_layout = generate_random_level(GRID_WIDTH, GRID_HEIGHT)
-
-    # create level
-    level = Level(level_layout)
-
+# Create level with tile sprites
+level = Level(level_layout, wall_tile_sprite, floor_tile_sprite)
 
 # Check if the spawn point was set correctly
-if Level.spawn_point is None:
+if level.spawn_point is None:
     print("Error: No spawn point defined in the level layout.")
     sys.exit(1)
 
@@ -78,12 +43,11 @@ player.image = player_sprite  # Assign the loaded player sprite
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
-# Create enemies group fix here
+# Create enemies group
 enemies = pygame.sprite.Group()
 
-# load and scale rat sprite
-rat_image = pygame.image.load("/home/shokk/PycharmProjects/Game/.venv/game/Rat.png")
-rat_image = pygame.transform.scale(rat_image, (TILE_SIZE, TILE_SIZE))
+# Load and scale rat sprite
+rat_image = rat_sprite
 
 # Create one enemy (rat)
 # Ensure the rat is not placed directly at the spawn point
@@ -110,6 +74,7 @@ FIGHTING = 2
 PLAYER_TURN = 3
 ENEMY_TURN = 4
 WAIT = 5
+GAME_OVER = 6
 
 game_state = EXPLORATION
 next_turn = None
@@ -154,7 +119,7 @@ while running:
 
     if game_state == EXPLORATION:
         # Update player with collision detection
-        player.update(keys, level.tiles)
+        player.update(keys, level.walls)  # Pass walls for collision detection
 
         # Check for proximity to switch to fighting mode
         for enemy in enemies:
@@ -196,6 +161,7 @@ while running:
             if player.health <= 0:
                 print("Game Over")
                 running = False
+                game_state = GAME_OVER
         else:
             game_state = WAIT
             next_turn = PLAYER_TURN
@@ -206,6 +172,10 @@ while running:
         pygame.time.wait(500)
         game_state = next_turn
         print(f"Switching to {game_state}")
+
+    elif game_state == GAME_OVER:
+        print("Game Over")
+        running = False
 
     # Draw the HUD
     hud.draw(screen)
