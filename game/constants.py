@@ -1,0 +1,25 @@
+
+# Screen dimensions
+SCREEN_WIDTH = 1024
+SCREEN_HEIGHT = 768
+
+# Tile size
+TILE_SIZE = 32
+
+# Grid dimensions
+GRID_WIDTH = SCREEN_WIDTH // TILE_SIZE
+GRID_HEIGHT = SCREEN_HEIGHT // TILE_SIZE
+
+# Colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+GRAY = (100, 100, 100)
+DARK_GRAY = (50, 50, 50)
+
+# Game states
+STATE_MAIN_MENU = 0
+STATE_PLAYING = 1
+STATE_GAME_OVER = 2
